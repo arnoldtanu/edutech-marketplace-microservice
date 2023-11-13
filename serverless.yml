@@ -1,0 +1,55 @@
+service: course-service
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  region: ap-southeast-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:PutItem
+        - dynamodb:DeleteItem
+        - dynamodb:Scan
+      Resource:
+        Fn::GetAtt:
+          - CourseTable
+          - Arn
+
+plugins:
+  - serverless-offline
+
+resources:
+  Resources:
+    CourseTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: CourseTable
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+          - AttributeName: postDate
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: postDate
+            AttributeType: N
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+
+functions:
+  addCourse:
+    handler: src/handlers/addCourse.handler
+    events:
+      - http:
+          path: /course
+          method: post
+  getAllCourses:
+    handler: src/handlers/getAllCourses.handler
+    events:
+      - http:
+          path: /course
+          method: get
